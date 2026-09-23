@@ -1,0 +1,6 @@
+* text=auto eol=lf
+
+# Keep the vendored release byte-for-byte for provenance checks.
+flow-steps/skills/fs-run/scripts/vendor/** -text -whitespace
+
+*.zip binary

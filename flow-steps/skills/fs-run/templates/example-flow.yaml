@@ -1,0 +1,54 @@
+name: feature
+start: analyze
+
+steps:
+  analyze:
+    # Для специализированного скилла раскомментируй и укажи его точное имя:
+    # skill: your-analysis-skill
+    ask:
+      - name: ticket
+        prompt: "Номер задачи?"
+        saveToStore: true
+      - name: request
+        prompt: "Что требуется сделать?"
+    prompt: |
+      Проанализируй задачу {{ticket}}: {{request}}
+      Сохрани требования, ограничения и открытые вопросы в docs/{{ticket}}/analysis.md.
+      Сохрани там всё, что понадобится следующему шагу без истории чата.
+      Остановись после анализа; не переходи к проектированию.
+    commitMessage: "{{ticket}}: анализ"
+    next: design
+
+  design:
+    prompt: |
+      Изучи docs/{{ticket}}/analysis.md.
+      Спроектируй решение и сохрани его в docs/{{ticket}}/design.md.
+      Включи принятые решения и план реализации. Не начинай реализацию.
+    commitMessage: "{{ticket}}: дизайн"
+    next: design_review
+
+  design_fix:
+    ask:
+      - name: feedback
+        prompt: "Что доработать в дизайне?"
+    prompt: |
+      Доработай docs/{{ticket}}/design.md по замечаниям: {{feedback}}
+      Не начинай реализацию.
+    # Сообщение спросит /flow-steps:fs-confirm, только если появились изменения.
+    next: design_review
+
+  implement:
+    prompt: |
+      Реализуй решение по docs/{{ticket}}/design.md.
+      Проверь изменённое поведение подходящими тестами и предъяви результат.
+    # Нет next: подтверждение завершит флоу.
+    # Нет commitMessage: при наличии диффа сообщение вводит пользователь.
+
+decisions:
+  design_review:
+    question: "Дизайн готов?"
+    options:
+      - label: "Да, перейти к реализации"
+        goto: implement
+      - label: "Доработать"
+        goto: design_fix
